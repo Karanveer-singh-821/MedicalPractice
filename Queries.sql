@@ -34,3 +34,30 @@ GROUP BY appointment_type.type
 ORDER BY AVG(appointment.duration_minutes) DESC
 LIMIT 1;
 
+SELECT DAYNAME(appointment.booked_at)
+FROM appointment
+WHERE appointment.booked_at > (CURRENT_DATE() - INTERVAL 6 MONTH)
+GROUP BY DAYNAME(appointment.booked_at)
+ORDER BY COUNT(*) DESC
+LIMIT 1;
+
+SELECT medication.name
+FROM diagnosis
+JOIN appointment_diagnosis ON appointment_diagnosis.diagnosis_code = diagnosis.diagnosis_code
+JOIN doctor_appointment ON doctor_appointment.doctor_appointment_id = appointment_diagnosis.doctor_appointment_id
+JOIN prescription ON prescription.doctor_appointment_id = doctor_appointment.doctor_appointment_id
+JOIN medication ON medication.medication_id = prescription.medication_id
+WHERE diagnosis.diagnosis_name = "Type 2 Diabetes"
+GROUP BY medication.name
+ORDER BY COUNT(prescription.medication_id) DESC
+LIMIT 5;
+
+SELECT appointment.appointment_id, billing_patient.amount_paid
+FROM billing_patient
+JOIN billing ON billing.billing_id = billing_patient.billing_id
+JOIN appointment ON appointment.appointment_id = billing.appointment_id
+WHERE billing_patient.amount_paid = (
+    SELECT MAX(billing_patient.amount_paid)
+    FROM billing_patient
+);
+
