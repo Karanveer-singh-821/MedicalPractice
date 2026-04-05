@@ -8,6 +8,25 @@ JOIN patients ON patients.patient_id = appointment.patient_id
 WHERE doctors.last_name = "Langford";
 
 
+SELECT 
+    d.first_name AS doctor_first_name,
+    d.last_name AS doctor_last_name,
+    a.appointment_id,
+    a.appointment_date,
+    a.scheduled_time,
+    p.first_name AS patient_first_name,
+    p.last_name AS patient_last_name
+FROM doctors d
+JOIN doctor_appointment da 
+    ON da.doctor_id = d.doctor_id
+JOIN appointment a 
+    ON a.appointment_id = da.appointment_id
+JOIN patients p 
+    ON p.patient_id = a.patient_id
+WHERE d.last_name = 'Langford'
+  AND a.appointment_date >= CURDATE() - INTERVAL 1 YEAR
+ORDER BY a.appointment_date DESC;
+
 
 
 -- Count the number of times that the patient “Randall Simmons” has cancelled an appointment with
@@ -17,6 +36,20 @@ SELECT patients.first_name, patients.last_name, COUNT(*) as "No. of Cancellation
 FROM appointment
 JOIN patients ON patients.patient_id = appointment.patient_id
 WHERE appointment.cancellation_penalty != 0 AND patients.first_name = "Chris" AND patients.last_name = 'Lee';
+
+SELECT 
+    p.first_name,
+    p.last_name,
+    COUNT(*) AS cancellation_count
+FROM appointment a
+JOIN patients p 
+    ON p.patient_id = a.patient_id
+WHERE a.cancellation_penalty != 0
+  AND p.first_name = 'Chris'
+  AND p.last_name = 'Lee'
+GROUP BY p.first_name, p.last_name;
+
+
 
 -- Sort the doctors by the number of prescriptions of the drug “Hydrocortisol” they’ve given to patients.
 SELECT doctors.first_name as "Doctor First Name", doctors.last_name as "Doctor Last Name", COUNT(*) AS "Specific Medication Prescription Count"
@@ -28,11 +61,43 @@ WHERE medication.name = "Hydrocortisol"
 GROUP BY doctor_appointment.doctor_id
 ORDER BY COUNT(*) DESC;
 
+SELECT 
+    doctors.first_name AS "Doctor First Name",
+    doctors.last_name AS "Doctor Last Name",
+    COUNT(*) AS "Specific Medication Prescription Count"
+FROM prescription
+JOIN doctor_appointment 
+    ON doctor_appointment.doctor_appointment_id = prescription.doctor_appointment_id
+JOIN doctors 
+    ON doctors.doctor_id = doctor_appointment.doctor_id
+JOIN medication 
+    ON medication.medication_id = prescription.medication_id
+WHERE medication.name = 'Hydrocortisol'
+GROUP BY doctors.doctor_id, doctors.first_name, doctors.last_name
+ORDER BY COUNT(*) DESC;
+
+
+
 -- Find the most expensive appointment.
 SELECT appointment.appointment_id, billing.total_amount
 FROM appointment
 JOIN billing ON billing.appointment_id = appointment.appointment_id
 WHERE billing.total_amount = (
+    SELECT MAX(total_amount)
+    FROM billing
+);
+
+SELECT 
+    a.appointment_id,
+    b.total_amount,
+    p.first_name,
+    p.last_name
+FROM appointment a
+JOIN billing b 
+    ON b.appointment_id = a.appointment_id
+JOIN patients p
+    ON p.patient_id = a.patient_id
+WHERE b.total_amount = (
     SELECT MAX(total_amount)
     FROM billing
 );
@@ -43,6 +108,17 @@ FROM appointment_type
 JOIN appointment ON appointment.appointment_type_id = appointment_type.appointment_type_id
 GROUP BY appointment_type.type
 ORDER BY AVG(appointment.duration_minutes) DESC
+LIMIT 1;
+
+SELECT 
+    at.type,
+    AVG(a.duration_minutes) AS avg_duration
+FROM appointment_type at
+JOIN appointment a 
+    ON a.appointment_type_id = at.appointment_type_id
+WHERE a.appointment_date >= CURDATE() - INTERVAL 6 MONTH
+GROUP BY at.type
+ORDER BY avg_duration DESC
 LIMIT 1;
 
 -- Which day of the week has the highest number of completed appointments in the past 6 months?

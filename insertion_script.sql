@@ -1,3 +1,4 @@
+-- Active: 1774543354517@@gondola.proxy.rlwy.net@41872@MedicalPractice
 -- =====================================
 -- CLINICS
 -- =====================================
@@ -76,7 +77,8 @@ INSERT INTO patients VALUES
 (17,'Quinn','Murphy','1995-12-01','2041818181','quinn.murphy@email.com'),
 (18,'Ryan','Foster','1990-11-13','2041919191','ryan.foster@email.com'),
 (19,'Sophia','Ward','1993-02-21','2042020202','sophia.ward@email.com'),
-(20,'Tyler','Price','1988-06-30','2042121212','tyler.price@email.com');
+(20,'Tyler','Price','1988-06-30','2042121212','tyler.price@email.com'),
+(21,'Randall','Simmons','1986-06-30','2042121212','randall.simon@email.com');
 
 -- =====================================
 -- ALLERGIES
