@@ -1,3 +1,4 @@
+-- List all the appointments that “Dr. Langford” attended in the last year
 SELECT doctors.first_name, doctors.last_name, doctor_appointment.appointment_id, appointment.patient_id, patients.first_name, patients.last_name
 FROM doctors
 JOIN doctor_appointment ON doctor_appointment.doctor_id = doctors.doctor_id
@@ -5,11 +6,15 @@ JOIN appointment ON appointment.appointment_id = doctor_appointment.appointment_
 JOIN patients ON patients.patient_id = appointment.patient_id
 WHERE doctors.last_name = "Langford";
 
+-- Count the number of times that the patient “Randall Simmons” has cancelled an appointment with
+--  less than 24 hours notice (cancelled an appointment less than 24 hours before the appointment was due 
+-- to occur).
 SELECT patients.first_name, patients.last_name, COUNT(*) as "No. of Cancellation Penalties"
 FROM appointment
 JOIN patients ON patients.patient_id = appointment.patient_id
 WHERE appointment.cancellation_penalty != 0 AND patients.first_name = "Chris" AND patients.last_name = 'Lee';
 
+-- Sort the doctors by the number of prescriptions of the drug “Hydrocortisol” they’ve given to patients.
 SELECT doctors.first_name as "Doctor First Name", doctors.last_name as "Doctor Last Name", COUNT(*) AS "Specific Medication Prescription Count"
 FROM prescription
 JOIN doctor_appointment ON doctor_appointment.doctor_appointment_id = prescription.doctor_appointment_id
@@ -19,6 +24,7 @@ WHERE medication.name = "Hydrocortisol"
 GROUP BY doctor_appointment.doctor_id
 ORDER BY COUNT(*) DESC;
 
+-- Find the most expensive appointment.
 SELECT appointment.appointment_id, billing.total_amount
 FROM appointment
 JOIN billing ON billing.appointment_id = appointment.appointment_id
@@ -27,6 +33,7 @@ WHERE billing.total_amount = (
     FROM billing
 );
 
+-- Which appointment type had the highest average duration over the past 6 months?
 SELECT appointment_type.type, AVG(appointment.duration_minutes)
 FROM appointment_type
 JOIN appointment ON appointment.appointment_type_id = appointment_type.appointment_type_id
