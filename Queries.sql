@@ -1,3 +1,4 @@
+-- Active: 1774543354517@@gondola.proxy.rlwy.net@41872@MedicalPractice
 -- List all the appointments that “Dr. Langford” attended in the last year
 SELECT doctors.first_name, doctors.last_name, doctor_appointment.appointment_id, appointment.patient_id, patients.first_name, patients.last_name
 FROM doctors
@@ -5,6 +6,9 @@ JOIN doctor_appointment ON doctor_appointment.doctor_id = doctors.doctor_id
 JOIN appointment ON appointment.appointment_id = doctor_appointment.appointment_id
 JOIN patients ON patients.patient_id = appointment.patient_id
 WHERE doctors.last_name = "Langford";
+
+
+
 
 -- Count the number of times that the patient “Randall Simmons” has cancelled an appointment with
 --  less than 24 hours notice (cancelled an appointment less than 24 hours before the appointment was due 
@@ -41,6 +45,7 @@ GROUP BY appointment_type.type
 ORDER BY AVG(appointment.duration_minutes) DESC
 LIMIT 1;
 
+-- Which day of the week has the highest number of completed appointments in the past 6 months?
 SELECT DAYNAME(appointment.booked_at)
 FROM appointment
 WHERE appointment.booked_at > (CURRENT_DATE() - INTERVAL 6 MONTH)
@@ -48,6 +53,7 @@ GROUP BY DAYNAME(appointment.booked_at)
 ORDER BY COUNT(*) DESC
 LIMIT 1;
 
+-- Which 5 medications are most prescribed for “Type 2 Diabetes” diagnoses?
 SELECT medication.name
 FROM diagnosis
 JOIN appointment_diagnosis ON appointment_diagnosis.diagnosis_code = diagnosis.diagnosis_code
@@ -59,6 +65,7 @@ GROUP BY medication.name
 ORDER BY COUNT(prescription.medication_id) DESC
 LIMIT 5;
 
+-- Which appointment generated the largest uninsured balance (the highest amount that the patient had to pay, after insurance)?
 SELECT appointment.appointment_id, billing_patient.amount_paid
 FROM billing_patient
 JOIN billing ON billing.billing_id = billing_patient.billing_id
