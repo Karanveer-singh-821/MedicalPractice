@@ -1,13 +1,5 @@
--- Active: 1774543354517@@gondola.proxy.rlwy.net@41872@MedicalPractice
+-- Active: 1774541812314@@gondola.proxy.rlwy.net@41872@MedicalPractice
 -- List all the appointments that “Dr. Langford” attended in the last year
-SELECT doctors.first_name, doctors.last_name, doctor_appointment.appointment_id, appointment.patient_id, patients.first_name, patients.last_name
-FROM doctors
-JOIN doctor_appointment ON doctor_appointment.doctor_id = doctors.doctor_id
-JOIN appointment ON appointment.appointment_id = doctor_appointment.appointment_id
-JOIN patients ON patients.patient_id = appointment.patient_id
-WHERE doctors.last_name = "Langford";
-
-
 SELECT 
     d.first_name AS doctor_first_name,
     d.last_name AS doctor_last_name,
@@ -32,11 +24,6 @@ ORDER BY a.appointment_date DESC;
 -- Count the number of times that the patient “Randall Simmons” has cancelled an appointment with
 --  less than 24 hours notice (cancelled an appointment less than 24 hours before the appointment was due 
 -- to occur).
-SELECT patients.first_name, patients.last_name, COUNT(*) as "No. of Cancellation Penalties"
-FROM appointment
-JOIN patients ON patients.patient_id = appointment.patient_id
-WHERE appointment.cancellation_penalty != 0 AND patients.first_name = "Chris" AND patients.last_name = 'Lee';
-
 SELECT 
     p.first_name,
     p.last_name,
@@ -52,14 +39,6 @@ GROUP BY p.first_name, p.last_name;
 
 
 -- Sort the doctors by the number of prescriptions of the drug “Hydrocortisol” they’ve given to patients.
-SELECT doctors.first_name as "Doctor First Name", doctors.last_name as "Doctor Last Name", COUNT(*) AS "Specific Medication Prescription Count"
-FROM prescription
-JOIN doctor_appointment ON doctor_appointment.doctor_appointment_id = prescription.doctor_appointment_id
-JOIN doctors ON doctors.doctor_id = doctor_appointment.doctor_id
-JOIN medication ON medication.medication_id = prescription.medication_id
-WHERE medication.name = "Hydrocortisol"
-GROUP BY doctor_appointment.doctor_id
-ORDER BY COUNT(*) DESC;
 
 SELECT 
     doctors.first_name AS "Doctor First Name",
@@ -79,13 +58,7 @@ ORDER BY COUNT(*) DESC;
 
 
 -- Find the most expensive appointment.
-SELECT appointment.appointment_id, billing.total_amount
-FROM appointment
-JOIN billing ON billing.appointment_id = appointment.appointment_id
-WHERE billing.total_amount = (
-    SELECT MAX(total_amount)
-    FROM billing
-);
+
 
 SELECT 
     a.appointment_id,
@@ -103,12 +76,6 @@ WHERE b.total_amount = (
 );
 
 -- Which appointment type had the highest average duration over the past 6 months?
-SELECT appointment_type.type, AVG(appointment.duration_minutes)
-FROM appointment_type
-JOIN appointment ON appointment.appointment_type_id = appointment_type.appointment_type_id
-GROUP BY appointment_type.type
-ORDER BY AVG(appointment.duration_minutes) DESC
-LIMIT 1;
 
 SELECT 
     at.type,
@@ -151,3 +118,46 @@ WHERE billing_patient.amount_paid = (
     FROM billing_patient
 );
 
+-- For each patient, list their first-ever diagnosis and the doctor that diagnosed it.
+
+SELECT
+   p.patient_id,
+   p.first_name AS patient_first_name,
+   p.last_name AS patient_last_name,
+   dgn.diagnosis_name,
+   doc.first_name AS doctor_first_name,
+   doc.last_name AS doctor_last_name,
+   a.appointment_date
+FROM patients p
+JOIN appointment a
+   ON a.patient_id = p.patient_id
+JOIN doctor_appointment da
+   ON da.appointment_id = a.appointment_id
+JOIN appointment_diagnosis ad
+   ON ad.doctor_appointment_id = da.doctor_appointment_id
+JOIN diagnosis dgn
+   ON dgn.diagnosis_code = ad.diagnosis_code
+JOIN doctors doc
+   ON doc.doctor_id = da.doctor_id
+WHERE a.appointment_date = (
+   SELECT MIN(a2.appointment_date)
+   FROM appointment a2
+   JOIN doctor_appointment da2
+       ON da2.appointment_id = a2.appointment_id
+   JOIN appointment_diagnosis ad2
+       ON ad2.doctor_appointment_id = da2.doctor_appointment_id
+   WHERE a2.patient_id = p.patient_id
+)
+ORDER BY p.patient_id;
+
+SELECT doctors.doctor_id, doctors.first_name, doctors.last_name, clinics.clinic_name
+FROM appointment
+JOIN doctor_appointment ON doctor_appointment.appointment_id = appointment.appointment_id
+JOIN doctors ON doctors.doctor_id = doctor_appointment.doctor_id
+JOIN doctor_schedule ON doctor_schedule.doctor_id = doctors.doctor_id
+JOIN schedule ON schedule.schedule_id = doctor_schedule.schedule_id
+JOIN clinics ON clinics.clinic_id = doctors.clinic_id
+WHERE DAYNAME(appointment.appointment_date) != schedule.day_of_week
+        OR appointment.scheduled_time < schedule.start_time
+        OR appointment.scheduled_time >= schedule.end_time
+GROUP BY doctors.doctor_id, clinics.clinic_id;
