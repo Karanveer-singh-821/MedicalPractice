@@ -129,6 +129,18 @@ GROUP BY DAYNAME(appointment.booked_at)
 ORDER BY COUNT(*) DESC
 LIMIT 1;
 
+SELECT 
+    DAYNAME(a.appointment_date) AS day_of_week,
+    COUNT(*) AS total_completed_appointments
+FROM appointment a
+JOIN appointment_status aps
+    ON aps.appointment_status_id = a.appointment_status_id
+WHERE aps.type = 'Completed'
+  AND a.appointment_date >= CURDATE() - INTERVAL 6 MONTH
+GROUP BY DAYNAME(a.appointment_date)
+ORDER BY total_completed_appointments DESC
+LIMIT 1;
+
 -- Which 5 medications are most prescribed for “Type 2 Diabetes” diagnoses?
 SELECT medication.name
 FROM diagnosis
@@ -141,6 +153,23 @@ GROUP BY medication.name
 ORDER BY COUNT(prescription.medication_id) DESC
 LIMIT 5;
 
+SELECT 
+    medication.name,
+    COUNT(prescription.medication_id) AS prescription_count
+FROM diagnosis
+JOIN appointment_diagnosis 
+    ON appointment_diagnosis.diagnosis_code = diagnosis.diagnosis_code
+JOIN doctor_appointment 
+    ON doctor_appointment.doctor_appointment_id = appointment_diagnosis.doctor_appointment_id
+JOIN prescription 
+    ON prescription.doctor_appointment_id = doctor_appointment.doctor_appointment_id
+JOIN medication 
+    ON medication.medication_id = prescription.medication_id
+WHERE diagnosis.diagnosis_name = 'Type 2 Diabetes'
+GROUP BY medication.name
+ORDER BY prescription_count DESC
+LIMIT 5;
+
 -- Which appointment generated the largest uninsured balance (the highest amount that the patient had to pay, after insurance)?
 SELECT appointment.appointment_id, billing_patient.amount_paid
 FROM billing_patient
@@ -149,5 +178,24 @@ JOIN appointment ON appointment.appointment_id = billing.appointment_id
 WHERE billing_patient.amount_paid = (
     SELECT MAX(billing_patient.amount_paid)
     FROM billing_patient
+);
+
+SELECT 
+    a.appointment_id,
+    SUM(bp.amount_paid) AS total_patient_paid
+FROM billing_patient bp
+JOIN billing b 
+    ON b.billing_id = bp.billing_id
+JOIN appointment a 
+    ON a.appointment_id = b.appointment_id
+GROUP BY a.appointment_id
+HAVING total_patient_paid = (
+    SELECT MAX(total_paid)
+    FROM (
+        SELECT SUM(amount_paid) AS total_paid
+        FROM billing_patient bp2
+        JOIN billing b2 ON b2.billing_id = bp2.billing_id
+        GROUP BY b2.appointment_id
+    ) t
 );
 
