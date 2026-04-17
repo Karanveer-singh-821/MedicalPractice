@@ -1,8 +1,14 @@
+-- Active: 1774541812314@@gondola.proxy.rlwy.net@41872@MedicalPractice
 
 
 -- =====================================================
 -- DROP TABLES (reverse dependency order)
 -- =====================================================
+DROP DATABASE IF EXISTS MedicalPractice;
+
+CREATE DATABASE MedicalPractice;
+
+USE MedicalPractice;
 
 DROP TABLE IF EXISTS prescription;
 DROP TABLE IF EXISTS measure;

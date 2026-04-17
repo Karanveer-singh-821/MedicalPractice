@@ -147,12 +147,13 @@ WHERE a.appointment_date = (
    JOIN appointment_diagnosis ad2
        ON ad2.doctor_appointment_id = da2.doctor_appointment_id
    WHERE a2.patient_id = p.patient_id
+        AND ad2.diagnosis_code IS NOT NULL
 )
 ORDER BY p.patient_id;
 
---10
+-- List all the doctors that worked outside their scheduled hours and identify the appointments where it happened.
 
-SELECT a.appointment_id, d.doctor_id
+SELECT d.doctor_id as "Doctor ID", a.appointment_id as "Appointment ID"
 FROM appointment a 
 JOIN doctor_appointment da ON da.appointment_id = a.appointment_id
 JOIN doctors d ON d.doctor_id = da.doctor_id
@@ -160,8 +161,8 @@ WHERE (
     SELECT SUM(
         CASE 
             WHEN DAYNAME(a.appointment_date) = s.day_of_week
-            AND a.scheduled_time >= s.start_time
-            AND a.scheduled_time < s.end_time
+                 AND a.scheduled_time >= s.start_time
+                 AND a.scheduled_time < s.end_time
             THEN 1
             ELSE 0
         END

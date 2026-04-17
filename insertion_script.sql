@@ -1,7 +1,9 @@
--- Active: 1774543354517@@gondola.proxy.rlwy.net@41872@MedicalPractice
+-- Active: 1774541812314@@gondola.proxy.rlwy.net@41872@MedicalPractice
 -- =====================================
 -- CLINICS
 -- =====================================
+USE MedicalPractice;
+
 INSERT INTO clinics VALUES
 (1,'City Medical Clinic','123 Main St','Winnipeg','R3C1A1','MB'),
 (2,'North Health Centre','456 McPhillips St','Winnipeg','R2V3B2','MB'),
