@@ -129,6 +129,16 @@ SELECT JSON_OBJECT(
     'patient_id', a1.patient_id,
     'type', at1.type,
     'base_fee', at1.fee,
+    'doctors', (
+        SELECT JSON_ARRAYAGG(
+            JSON_OBJECT(
+                'doctor_id', d2.doctor_id,
+                'name', CONCAT(d2.first_name,' ',d2.last_name)
+            )
+        )
+        FROM doctors d2
+        WHERE d2.doctor_id = da1.doctor_id
+    ),
     'duration_minutes', a1.duration_minutes,
     'scheduled_at', CONCAT(a1.scheduled_time, ' ', a1.appointment_date),
     'status', as1.type,
@@ -137,6 +147,7 @@ SELECT JSON_OBJECT(
     'rescheduled_id', ra1.new_appointment_id
 )
 FROM appointment a1
+JOIN doctor_appointment da1 ON da1.appointment_id = a1.appointment_id
 JOIN appointment_type at1 ON at1.appointment_type_id = a1.appointment_type_id
 JOIN appointment_status as1 ON as1.appointment_status_id = a1.appointment_status_id
 LEFT JOIN rescheduled_appointments ra1 ON ra1.appointment_id = a1.appointment_id
