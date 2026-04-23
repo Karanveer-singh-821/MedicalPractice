@@ -89,10 +89,10 @@ ORDER BY avg_duration DESC
 LIMIT 1;
 
 -- Which day of the week has the highest number of completed appointments in the past 6 months?
-SELECT DAYNAME(appointment.booked_at)
+SELECT DAYNAME(appointment.appointment_date)
 FROM appointment
-WHERE appointment.booked_at > (CURRENT_DATE() - INTERVAL 6 MONTH)
-GROUP BY DAYNAME(appointment.booked_at)
+WHERE appointment.appointment_date > (CURRENT_DATE() - INTERVAL 6 MONTH)
+GROUP BY DAYNAME(appointment.appointment_date)
 ORDER BY COUNT(*) DESC
 LIMIT 1;
 
@@ -195,17 +195,28 @@ WHERE a.appointment_date = (
    JOIN appointment_diagnosis ad2
        ON ad2.doctor_appointment_id = da2.doctor_appointment_id
    WHERE a2.patient_id = p.patient_id
+        AND ad2.diagnosis_code IS NOT NULL
 )
 ORDER BY p.patient_id;
 
-SELECT doctors.doctor_id, doctors.first_name, doctors.last_name, clinics.clinic_name
-FROM appointment
-JOIN doctor_appointment ON doctor_appointment.appointment_id = appointment.appointment_id
-JOIN doctors ON doctors.doctor_id = doctor_appointment.doctor_id
-JOIN doctor_schedule ON doctor_schedule.doctor_id = doctors.doctor_id
-JOIN schedule ON schedule.schedule_id = doctor_schedule.schedule_id
-JOIN clinics ON clinics.clinic_id = doctors.clinic_id
-WHERE DAYNAME(appointment.appointment_date) != schedule.day_of_week
-        OR appointment.scheduled_time < schedule.start_time
-        OR appointment.scheduled_time >= schedule.end_time
-GROUP BY doctors.doctor_id, clinics.clinic_id;
+-- List all the doctors that worked outside their scheduled hours and identify the appointments where it happened.
+
+SELECT d.doctor_id as "Doctor ID", a.appointment_id as "Appointment ID"
+FROM appointment a 
+JOIN doctor_appointment da ON da.appointment_id = a.appointment_id
+JOIN doctors d ON d.doctor_id = da.doctor_id
+WHERE (
+    SELECT SUM(
+        CASE 
+            WHEN DAYNAME(a.appointment_date) = s.day_of_week
+                 AND a.scheduled_time >= s.start_time
+                 AND a.scheduled_time < s.end_time
+            THEN 1
+            ELSE 0
+        END
+    )
+    FROM doctors d2
+    JOIN doctor_schedule ds ON ds.doctor_id = d2.doctor_id
+    JOIN schedule s ON s.schedule_id = ds.schedule_id
+    WHERE d2.doctor_id = d.doctor_id 
+) = 0;
